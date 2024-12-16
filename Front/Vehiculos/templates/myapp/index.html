@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>App Registro Vehiculos</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <style>
+        .form-container {
+            display: none;
+            margin-top: 30px;
+        }
+        .title-background {
+            background-color: #034384;
+            padding: 30px;
+            border-radius: 5px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center title-background">Taller Mecanico Ultima Esperanza</h1>
+        
+        <!-- Botones para mostrar formularios y logout -->
+        <div class="text-center mb-3">
+            <button class="btn btn-success" onclick="toggleForm('formAgregarVehiculo')">Agregar Vehículo</button>
+            <a href="{% url 'logout' %}" class="btn btn-danger">Logout</a>
+        </div>
+
+        <!-- Formulario para agregar un nuevo vehículo -->
+        <div id="formAgregarVehiculo" class="form-container">
+            <h2>Agregar Vehículo</h2>
+            <form method="post" action="{% url 'agregar_vehiculo' %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="modelo" class="form-label">Modelo</label>
+                    <input type="text" class="form-control" id="modelo" name="modelo" required>
+                </div>
+                <div class="mb-3">
+                    <label for="marca" class="form-label">Marca</label>
+                    <input type="text" class="form-control" id="marca" name="marca" required>
+                </div>
+                <div class="mb-3">
+                    <label for="placa" class="form-label">Patente</label>
+                    <input type="text" class="form-control" id="placa" name="placa" required>
+                </div>
+                <div class="mb-3">
+                    <label for="year" class="form-label">Año</label>
+                    <input type="number" class="form-control" id="year" name="year" required>
+                </div>
+                <div class="mb-3">
+                    <label for="cliente" class="form-label">Cliente</label>
+                    <input type="text" class="form-control" id="cliente" name="cliente" required>
+                </div>
+                <div class="mb-3">
+                    <label for="estado" class="form-label">Estado</label>
+                    <input type="text" class="form-control" id="estado" name="estado" required>
+                </div>
+                <div class="mb-3">
+                    <label for="mecanico" class="form-label">Mecánico</label>
+                    <input type="text" class="form-control" id="mecanico" name="mecanico" required>
+                </div>
+                <div class="mb-3">
+                    <label for="servicios" class="form-label">Servicios</label>
+                    <input type="text" class="form-control" id="servicios" name="servicios" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Agregar Vehículo</button>
+            </form>
+        </div>
+
+        <!-- Tabla de vehículos -->
+        <h2 class="mt-5">Lista de Vehículos</h2>
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>Modelo</th>
+                    <th>Marca</th>
+                    <th>Patente</th>
+                    <th>Año</th>
+                    <th>Cliente</th>
+                    <th>Estado</th>
+                    <th>Mecánico</th>
+                    <th>Servicios</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in datos %}
+                <tr>
+                    <td>{{ item.modelo }}</td>
+                    <td>{{ item.marca }}</td>
+                    <td>{{ item.placa }}</td>
+                    <td>{{ item.year }}</td>
+                    <td>{{ item.cliente }}</td>
+                    <td>{{ item.estado }}</td>
+                    <td>{{ item.mecanico }}</td>
+                    <td>{{ item.servicios }}</td>
+                    <td>
+                        <!-- Botón para eliminar vehículo -->
+                        <form method="post" action="{% url 'eliminar_vehiculo' item.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Eliminar</button>
+                        </form>
+                        <!-- Botón para modificar vehículo -->
+                        <button class="btn btn-warning" onclick="editarVehiculo('{{ item.id }}', '{{ item.modelo }}', '{{ item.marca }}', '{{ item.placa }}', '{{ item.year }}', '{{ item.cliente }}', '{{ item.estado }}', '{{ item.mecanico }}', '{{ item.servicios }}')">Modificar</button>
+                        <!-- Botón para imprimir información del vehículo -->
+                        <button class="btn btn-info" onclick="imprimirVehiculo('{{ item.modelo }}', '{{ item.marca }}', '{{ item.placa }}', '{{ item.year }}', '{{ item.cliente }}', '{{ item.estado }}', '{{ item.mecanico }}', '{{ item.servicios }}')">Imprimir</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Formulario para modificar un vehículo -->
+        <div id="formModificarVehiculo" class="form-container">
+            <h2>Modificar Vehículo</h2>
+            <form method="post" action="{% url 'modificar_vehiculo' %}">
+                {% csrf_token %}
+                <input type="hidden" id="vehiculoId" name="vehiculoId">
+                <div class="mb-3">
+                    <label for="modeloModificar" class="form-label">Modelo</label>
+                    <input type="text" class="form-control" id="modeloModificar" name="modelo" required>
+                </div>
+                <div class="mb-3">
+                    <label for="marcaModificar" class="form-label">Marca</label>
+                    <input type="text" class="form-control" id="marcaModificar" name="marca" required>
+                </div>
+                <div class="mb-3">
+                    <label for="placaModificar" class="form-label">Patente</label>
+                    <input type="text" class="form-control" id="placaModificar" name="placa" required>
+                </div>
+                <div class="mb-3">
+                    <label for="yearModificar" class="form-label">Año</label>
+                    <input type="number" class="form-control" id="yearModificar" name="year" required>
+                </div>
+                <div class="mb-3">
+                    <label for="clienteModificar" class="form-label">Cliente</label>
+                    <input type="text" class="form-control" id="clienteModificar" name="cliente" required>
+                </div>
+                <div class="mb-3">
+                    <label for="estadoModificar" class="form-label">Estado</label>
+                    <input type="text" class="form-control" id="estadoModificar" name="estado" required>
+                </div>
+                <div class="mb-3">
+                    <label for="mecanicoModificar" class="form-label">Mecánico</label>
+                    <input type="text" class="form-control" id="mecanicoModificar" name="mecanico" required>
+                </div>
+                <div class="mb-3">
+                    <label for="serviciosModificar" class="form-label">Servicios</label>
+                    <input type="text" class="form-control" id="serviciosModificar" name="servicios" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Modificar Vehículo</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function toggleForm(formId) {
+            const form = document.getElementById(formId);
+            if (form.style.display === 'none' || form.style.display === '') {
+                form.style.display = 'block';
+            } else {
+                form.style.display = 'none';
+            }
+        }
+
+        function editarVehiculo(id, modelo, marca, placa, year, cliente, estado, mecanico, servicios) {
+            toggleForm('formModificarVehiculo');
+            document.getElementById('vehiculoId').value = id;
+            document.getElementById('modeloModificar').value = modelo;
+            document.getElementById('marcaModificar').value = marca;
+            document.getElementById('placaModificar').value = placa;
+            document.getElementById('yearModificar').value = year;
+            document.getElementById('clienteModificar').value = cliente;
+            document.getElementById('estadoModificar').value = estado;
+            document.getElementById('mecanicoModificar').value = mecanico;
+            document.getElementById('serviciosModificar').value = servicios;
+        }
+
+        function imprimirVehiculo(modelo, marca, placa, year, cliente, estado, mecanico, servicios) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    doc.setFontSize(16);
+    doc.text('Información del Vehículo', 105, 10, null, null, 'center');
+
+    doc.setFontSize(12);
+
+    
+    doc.text('Taller Mecanico Ultima Esperanza', 10, 20);
+    doc.text('Direccion: Avenida siempre vida 1234', 10, 30);
+    doc.text('Comuna: Vitacura', 10, 40);
+    doc.text('Telefono: +56 9 123456789', 10, 50);
+    doc.text('Whatsapp: +56 9 987654321', 10, 60);
+
+    
+    const startX = 10;
+    const startY = 70;
+    const cellWidth = 40;
+    const cellHeight = 10;
+
+    
+    doc.rect(startX, startY, cellWidth, cellHeight);
+    doc.text('Campo', startX + 2, startY + 7);
+    doc.rect(startX + cellWidth, startY, cellWidth * 2, cellHeight);
+    doc.text('Valor', startX + cellWidth + 2, startY + 7);
+
+    
+    const fields = ['Modelo', 'Marca', 'Patente', 'Año', 'Cliente', 'Estado', 'Mecánico', 'Servicios'];
+    const values = [modelo, marca, placa, year, cliente, estado, mecanico, servicios];
+
+    let currentY = startY + cellHeight;
+
+    for (let i = 0; i < fields.length; i++) {
+        const textLines = doc.splitTextToSize(values[i], cellWidth * 2 - 4);
+        const cellHeightAdjusted = Math.max(cellHeight, textLines.length * 6); // Ajustar la altura de la celda
+
+        doc.rect(startX, currentY, cellWidth, cellHeightAdjusted);
+        doc.text(fields[i], startX + 2, currentY + 7);
+        doc.rect(startX + cellWidth, currentY, cellWidth * 2, cellHeightAdjusted);
+        doc.text(textLines, startX + cellWidth + 2, currentY + 7);
+
+        currentY += cellHeightAdjusted;
+    }
+
+    doc.save(`${modelo}_${placa}.pdf`);
+}
+    </script>
+</body>
+</html>
